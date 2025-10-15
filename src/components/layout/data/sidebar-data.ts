@@ -13,7 +13,7 @@ import {
   IconNetwork,
   IconBook,
 } from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd, BookOpen, Users } from 'lucide-react'
+import { AudioWaveform, Command, GalleryVerticalEnd, BookOpen, Users, GraduationCap } from 'lucide-react'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
@@ -57,6 +57,11 @@ export const sidebarData: SidebarData = {
           title: 'Sections',
           url: '/sections',
           icon: Users,
+        },
+        {
+          title: 'Subjects',
+          url: '/subjects',
+          icon: GraduationCap,
         },
         {
           title: 'Settings',
