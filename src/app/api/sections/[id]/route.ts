@@ -1,13 +1,13 @@
+import { BASE_URL } from '@/constants'
 import { NextRequest, NextResponse } from 'next/server'
 
-const BASE_URL = 'http://localhost:3001/api/v1'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${BASE_URL}/sections/${params.id}`, {
+    const response = await fetch(`${BASE_URL}/api/v1/sections/${params.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -36,7 +36,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BASE_URL}/sections/${params.id}`, {
+    const response = await fetch(`${BASE_URL}/api/v1/sections/${params.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${BASE_URL}/sections/${params.id}`, {
+    const response = await fetch(`${BASE_URL}/api/v1/sections/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

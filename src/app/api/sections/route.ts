@@ -1,10 +1,10 @@
+import { BASE_URL } from '@/constants'
 import { NextRequest, NextResponse } from 'next/server'
 
-const BASE_URL = 'http://localhost:3001/api/v1'
 
 export async function GET() {
   try {
-    const response = await fetch(`${BASE_URL}/sections`, {
+    const response = await fetch(`${BASE_URL}/api/v1/sections`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BASE_URL}/sections`, {
+    const response = await fetch(`${BASE_URL}/api/v1/sections`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

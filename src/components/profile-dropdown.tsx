@@ -14,14 +14,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from '@/hooks/use-toast'
+import { useAuth } from '@/context/auth-context'
+import { useLogoutMutation } from '@/store/api/authApi'
 
 export function ProfileDropdown() {
   const router = useRouter()
+  const { user, logout } = useAuth()
+  const [logoutMutation, { isLoading }] = useLogoutMutation()
 
   const handleLogout = async () => {
-    
+    try {
+      await logoutMutation().unwrap()
+      logout()
+      toast({
+        title: 'Logged out successfully',
+        description: 'You have been logged out of your account.',
+      })
       router.push('/auth/sign-in')
-    
+    } catch (error: any) {
+      // Even if the API call fails, we should still logout locally
+      logout()
+      toast({
+        title: 'Logged out',
+        description: 'You have been logged out of your account.',
+      })
+      router.push('/auth/sign-in')
+    }
   }
 
   return (
@@ -36,9 +54,11 @@ export function ProfileDropdown() {
       <DropdownMenuContent className='w-56' align='end' forceMount>
         <DropdownMenuLabel className='font-normal'>
           <div className='flex flex-col space-y-1'>
-            <p className='text-sm font-medium leading-none'>reoring</p>
+            <p className='text-sm font-medium leading-none'>
+              {user?.username || 'User'}
+            </p>
             <p className='text-xs leading-none text-muted-foreground'>
-              reoring@gmail.com
+              {user?.email || 'user@example.com'}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -59,8 +79,8 @@ export function ProfileDropdown() {
           <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          Log out
+        <DropdownMenuItem onClick={handleLogout} disabled={isLoading}>
+          {isLoading ? 'Logging out...' : 'Log out'}
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

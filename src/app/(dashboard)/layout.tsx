@@ -5,8 +5,8 @@ import { ThemeProvider } from 'next-themes'
 import { SearchProvider } from '@/context/search-context'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
+import { ProtectedRoute } from '@/components/protected-route'
 import { cn } from '@/lib/utils'
-import ReduxProvider from '@/store/ReduxProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,7 +24,7 @@ export default function DashboardLayout({
         disableTransitionOnChange
       >
         <div>
-          <ReduxProvider>
+          <ProtectedRoute>
             <SidebarProvider>
               <SearchProvider>
                 <AppSidebar />
@@ -44,7 +44,7 @@ export default function DashboardLayout({
                 </div>
               </SearchProvider>
             </SidebarProvider>
-          </ReduxProvider>
+          </ProtectedRoute>
         </div>
       </ThemeProvider>
     </div>

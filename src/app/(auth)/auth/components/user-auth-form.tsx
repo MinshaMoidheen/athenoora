@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,9 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { useLoginMutation } from '@/store/api/authApi'
+import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/context/auth-context'
 
 type UserAuthFormProps = HTMLAttributes<HTMLDivElement>
 
@@ -37,7 +41,10 @@ const formSchema = z.object({
 })
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast()
+  const { login } = useAuth()
+  const [loginMutation, { isLoading }] = useLoginMutation()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,18 +54,47 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    setIsLoading(true)
-    // eslint-disable-next-line no-console
-    console.log(data)
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    try {
+      const result = await loginMutation({
+        email: data.email,
+        password: data.password,
+      }).unwrap()
 
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 3000)
-  }
+      // Use the auth context to store user data
+      login(result.user, result.accessToken)
+
+      toast({
+        title: 'Login Successful',
+        description: `Welcome back, ${result?.user?.username}!`,
+      })
+
+      // Redirect to dashboard
+      router.push('/')
+    } catch (error: any) {
+      console.log("result",error)
+      toast({
+        title: error?.data?.code,
+        description: 'Something went wrong. Please try again.',
+      })
+      
+        }
+      } 
+
+     
+    
+  
 
   return (
-    <div className={cn('grid gap-6', className)} {...props}>
+    <div className={cn('grid gap-6 relative', className)} {...props}>
+      {isLoading && (
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground">Signing in...</p>
+          </div>
+        </div>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className='grid gap-2'>
@@ -69,7 +105,11 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                 <FormItem className='space-y-1'>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder='name@example.com' {...field} />
+                    <Input 
+                      placeholder='name@example.com' 
+                      disabled={isLoading}
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -90,14 +130,25 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                     </Link>
                   </div>
                   <FormControl>
-                    <PasswordInput placeholder='********' {...field} />
+                    <PasswordInput 
+                      placeholder='********' 
+                      disabled={isLoading}
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button className='mt-2' disabled={isLoading}>
-              Login
+              {isLoading ? (
+                <>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                  Signing in...
+                </>
+              ) : (
+                'Login'
+              )}
             </Button>
 
             {/* <div className='relative my-2'>

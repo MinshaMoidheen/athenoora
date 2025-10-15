@@ -83,16 +83,7 @@ export const sidebarData: SidebarData = {
           url: '/logs',
           icon: FileText,
         },
-        {
-          title: 'Settings',
-          url: '/settings',
-          icon: IconSettings,
-        },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: IconHelp,
-        },
+       
       ],
     },
   ],

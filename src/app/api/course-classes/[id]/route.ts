@@ -1,13 +1,13 @@
+import { BASE_URL } from '@/constants'
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/course-classes/${params.id}`, {
+    const response = await fetch(`${BASE_URL}/api/v1/course-classes/${params.id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -32,7 +32,7 @@ export async function PATCH(
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BACKEND_URL}/api/v1/course-classes/${params.id}`, {
+    const response = await fetch(`${BASE_URL}/api/v1/course-classes/${params.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/course-classes/${params.id}`, {
+    const response = await fetch(`${BASE_URL}/api/v1/course-classes/${params.id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

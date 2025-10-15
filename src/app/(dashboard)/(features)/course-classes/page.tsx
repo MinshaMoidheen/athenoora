@@ -645,20 +645,8 @@ export default function CourseClassesPage() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Course Classes {viewMode === 'list' ? 'List' : 'Grid'}
-          </CardTitle>
-          <CardDescription>
-            {viewMode === 'list' 
-              ? 'A list of all course classes in the system'
-              : 'Course classes displayed in a grid layout'
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
+      <div>
+         {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -685,8 +673,7 @@ export default function CourseClassesPage() {
               {viewMode === 'grid' && renderGridView()}
             </>
           )}
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Add/Edit Modal */}
       <CourseClassModal

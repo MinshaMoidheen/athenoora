@@ -1,10 +1,10 @@
+import { BASE_URL } from '@/constants'
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001'
 
 export async function GET() {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/course-classes`, {
+    const response = await fetch(`${BASE_URL}/api/v1/course-classes`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BACKEND_URL}/api/v1/course-classes`, {
+    const response = await fetch(`${BASE_URL}/api/v1/course-classes`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
