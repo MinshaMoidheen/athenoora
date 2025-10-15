@@ -34,7 +34,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { CourseClassModal } from '@/components/course-class-modal'
-// Removed API imports - using dummy data only
+import { 
+  useGetCourseClassesQuery,
+  useCreateCourseClassMutation,
+  useUpdateCourseClassMutation,
+  useDeleteCourseClassMutation,
+  type CourseClass as ApiCourseClass
+} from '@/store/api/courseClassApi'
 import { toast } from '@/hooks/use-toast'
 import {
   ColumnDef,
@@ -50,14 +56,8 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 
-// Define CourseClass type locally since we're not using API
-interface CourseClass {
-  _id: string
-  name: string
-  description?: string
-  createdAt: string
-  updatedAt: string
-}
+// Use the API CourseClass type
+type CourseClass = ApiCourseClass
 
 type ViewMode = 'list' | 'grid'
 
@@ -74,67 +74,11 @@ export default function CourseClassesPage() {
     pageSize: 10,
   })
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [courseClasses, setCourseClasses] = useState<CourseClass[]>([])
-
-  // Dummy data for development and testing
-  const dummyCourseClasses: CourseClass[] = [
-    {
-      _id: '1',
-      name: 'Mathematics 101',
-      description: 'Introduction to basic mathematical concepts including algebra, geometry, and trigonometry.',
-      createdAt: '2024-01-15T10:30:00Z',
-      updatedAt: '2024-01-15T10:30:00Z'
-    },
-    {
-      _id: '2',
-      name: 'Computer Science Fundamentals',
-      description: 'Core concepts in computer science including programming, data structures, and algorithms.',
-      createdAt: '2024-01-20T14:15:00Z',
-      updatedAt: '2024-01-20T14:15:00Z'
-    },
-    {
-      _id: '3',
-      name: 'English Literature',
-      description: 'Study of classic and contemporary English literature with focus on critical analysis.',
-      createdAt: '2024-01-25T09:45:00Z',
-      updatedAt: '2024-01-25T09:45:00Z'
-    },
-    {
-      _id: '4',
-      name: 'Physics Lab',
-      description: 'Hands-on experiments and practical applications of physics principles.',
-      createdAt: '2024-02-01T11:20:00Z',
-      updatedAt: '2024-02-01T11:20:00Z'
-    },
-    {
-      _id: '5',
-      name: 'History of Art',
-      description: 'Survey of art history from ancient times to modern era with emphasis on cultural context.',
-      createdAt: '2024-02-05T16:30:00Z',
-      updatedAt: '2024-02-05T16:30:00Z'
-    },
-    {
-      _id: '6',
-      name: 'Chemistry Advanced',
-      description: 'Advanced topics in chemistry including organic chemistry, biochemistry, and analytical methods.',
-      createdAt: '2024-02-10T13:45:00Z',
-      updatedAt: '2024-02-10T13:45:00Z'
-    },
-    
-  ]
-
-  // Initialize with dummy data
-  const [isLoading, setIsLoading] = useState(false)
-  const [isCreating, setIsCreating] = useState(false)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  // Initialize course classes with dummy data
-  useEffect(() => {
-    if (courseClasses.length === 0) {
-      setCourseClasses(dummyCourseClasses)
-    }
-  }, [courseClasses.length])
+  // API hooks
+  const { data: courseClasses = [], isLoading, error } = useGetCourseClassesQuery()
+  const [createCourseClass, { isLoading: isCreating }] = useCreateCourseClassMutation()
+  const [updateCourseClass, { isLoading: isUpdating }] = useUpdateCourseClassMutation()
+  const [deleteCourseClass, { isLoading: isDeleting }] = useDeleteCourseClassMutation()
 
   // Column definitions for the table
   const columns: ColumnDef<CourseClass>[] = useMemo(
@@ -276,44 +220,40 @@ export default function CourseClassesPage() {
 
   const handleModalSubmit = async (data: any) => {
     try {
-      setIsUpdating(true)
-      
       if (editingCourseClass) {
         // Update existing course class
-        setCourseClasses(prev => prev.map(courseClass => 
-          courseClass._id === editingCourseClass._id 
-            ? { ...courseClass, ...data, updatedAt: new Date().toISOString() }
-            : courseClass
-        ))
+        await updateCourseClass({
+          id: editingCourseClass._id,
+          data: {
+            name: data.name,
+            description: data.description,
+          }
+        }).unwrap()
         toast({
           title: 'Success',
           description: 'Course class updated successfully.',
         })
       } else {
         // Create new course class
-        const newCourseClass: CourseClass = {
-          _id: Date.now().toString(),
+        await createCourseClass({
           name: data.name,
-          description: data.description || '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        }
-        setCourseClasses(prev => [...prev, newCourseClass])
+          description: data.description,
+        }).unwrap()
         toast({
           title: 'Success',
           description: 'Course class created successfully.',
         })
       }
+      // Close modal and reset form
       setIsModalOpen(false)
       setEditingCourseClass(null)
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving course class:', error)
       toast({
         title: 'Error',
-        description: 'Failed to save course class. Please try again.',
+        description: error?.data?.message || 'Failed to save course class. Please try again.',
         variant: 'destructive',
       })
-    } finally {
-      setIsUpdating(false)
     }
   }
 
@@ -321,21 +261,19 @@ export default function CourseClassesPage() {
     if (!deletingCourseClass) return
 
     try {
-      setIsDeleting(true)
-      setCourseClasses(prev => prev.filter(courseClass => courseClass._id !== deletingCourseClass._id))
+      await deleteCourseClass(deletingCourseClass._id).unwrap()
       toast({
         title: 'Success',
         description: 'Course class deleted successfully.',
       })
       setDeletingCourseClass(null)
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error deleting course class:', error)
       toast({
         title: 'Error',
-        description: 'Failed to delete course class. Please try again.',
+        description: error?.data?.message || 'Failed to delete course class. Please try again.',
         variant: 'destructive',
       })
-    } finally {
-      setIsDeleting(false)
     }
   }
 
@@ -514,82 +452,6 @@ export default function CourseClassesPage() {
     )
   }
 
-  // const renderFolderView = () => (
-  //   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-  //     {courseClasses.map((courseClass) => (
-  //       <Card key={courseClass._id} className="hover:shadow-md transition-shadow group">
-  //         <CardHeader className="pb-3">
-  //           <div className="flex items-center justify-between">
-  //             <div className="flex items-center gap-3">
-  //               <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-  //                 <Folder className="h-6 w-6 text-primary" />
-  //               </div>
-  //               <div>
-  //                 <CardTitle className="text-lg">{courseClass.name}</CardTitle>
-  //                 <p className="text-xs text-muted-foreground">Course Class</p>
-  //               </div>
-  //             </div>
-  //             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-  //               <Button
-  //                 variant="ghost"
-  //                 size="sm"
-  //                 onClick={() => handleEdit(courseClass)}
-  //                 disabled={isUpdating}
-  //               >
-  //                 <Edit className="h-4 w-4" />
-  //               </Button>
-  //               <Button
-  //                 variant="ghost"
-  //                 size="sm"
-  //                 onClick={() => handleDelete(courseClass)}
-  //                 disabled={isDeleting}
-  //               >
-  //                 <Trash2 className="h-4 w-4 text-destructive" />
-  //               </Button>
-  //             </div>
-  //           </div>
-  //         </CardHeader>
-  //         <CardContent className="pt-0">
-  //           {courseClass.description ? (
-  //             <p className="text-sm text-muted-foreground line-clamp-2">
-  //               {courseClass.description}
-  //             </p>
-  //           ) : (
-  //             <Badge variant="secondary" className="text-xs">No description</Badge>
-  //           )}
-  //           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-  //             <span>
-  //               Created: {courseClass.createdAt
-  //                 ? new Date(courseClass.createdAt).toLocaleDateString()
-  //                 : 'N/A'}
-  //             </span>
-  //             <Badge variant="outline" className="text-xs">
-  //               {courseClass.name.length} chars
-  //             </Badge>
-  //           </div>
-  //         </CardContent>
-  //       </Card>
-  //     ))}
-  //   </div>
-  // )
-
-  // if (error) {
-  //   return (
-  //     <div className="flex items-center justify-center h-64">
-  //       <Card className="w-96">
-  //         <CardContent className="pt-6">
-  //           <div className="text-center">
-  //             <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-  //             <h3 className="mt-2 text-sm font-semibold text-gray-900">Error</h3>
-  //             <p className="mt-1 text-sm text-gray-500">
-  //               Failed to load course classes. Please try again.
-  //             </p>
-  //           </div>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   )
-  // }
 
   return (
     <div className="space-y-6">
@@ -652,6 +514,14 @@ export default function CourseClassesPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="mt-2 text-sm text-muted-foreground">Loading course classes...</p>
               </div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-2 text-sm font-semibold text-gray-900">Error loading course classes</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Failed to load course classes. Please try again.
+              </p>
             </div>
           ) : courseClasses.length === 0 ? (
             <div className="text-center py-8">

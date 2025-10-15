@@ -1,10 +1,14 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { BASE_URL } from '@/constants'
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+
 
 export const baseApi = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ baseUrl: BASE_URL }),
-      tagTypes: ['Party', 'CourseClass', 'Section'],
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: BASE_URL,
+    credentials: 'include',
+  }),
+  tagTypes: ['Party', 'CourseClass', 'Section'],
   endpoints: () => ({}),
 })
 

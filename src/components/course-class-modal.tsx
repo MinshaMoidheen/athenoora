@@ -69,14 +69,32 @@ export function CourseClassModal({
     }
   }, [courseClass, form])
 
+  // Reset form when modal opens for new course class
+  useEffect(() => {
+    if (isOpen && !courseClass) {
+      form.reset({
+        name: '',
+        description: '',
+      })
+    }
+  }, [isOpen, courseClass, form])
+
   const handleSubmit = (data: CourseClassFormData) => {
     onSubmit(data)
+  }
+
+  const handleClose = () => {
+    form.reset({
+      name: '',
+      description: '',
+    })
+    onClose()
   }
 
   const isEdit = !!courseClass
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
@@ -131,7 +149,7 @@ export function CourseClassModal({
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={handleClose}
                 disabled={isLoading}
               >
                 Cancel

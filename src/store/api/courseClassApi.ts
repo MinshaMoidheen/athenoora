@@ -1,3 +1,4 @@
+import { COURSE_CLASS_URL } from '@/constants'
 import { baseApi } from './baseApi'
 
 export interface CourseClass {
@@ -21,16 +22,16 @@ export interface UpdateCourseClassRequest {
 export const courseClassApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getCourseClasses: builder.query<CourseClass[], void>({
-      query: () => '/course-classes',
+      query: () => COURSE_CLASS_URL,
       providesTags: ['CourseClass'],
     }),
     getCourseClassById: builder.query<CourseClass, string>({
-      query: (id) => `/course-classes/${id}`,
+      query: (id) => `${COURSE_CLASS_URL}/${id}`,
       providesTags: (result, error, id) => [{ type: 'CourseClass', id }],
     }),
     createCourseClass: builder.mutation<CourseClass, CreateCourseClassRequest>({
       query: (courseClass) => ({
-        url: '/course-classes',
+        url: COURSE_CLASS_URL,
         method: 'POST',
         body: courseClass,
       }),
@@ -38,7 +39,7 @@ export const courseClassApi = baseApi.injectEndpoints({
     }),
     updateCourseClass: builder.mutation<CourseClass, { id: string; data: UpdateCourseClassRequest }>({
       query: ({ id, data }) => ({
-        url: `/course-classes/${id}`,
+        url: `${COURSE_CLASS_URL}/${id}`,
         method: 'PATCH',
         body: data,
       }),
@@ -49,7 +50,7 @@ export const courseClassApi = baseApi.injectEndpoints({
     }),
     deleteCourseClass: builder.mutation<{ message: string }, string>({
       query: (id) => ({
-        url: `/course-classes/${id}`,
+        url: `${COURSE_CLASS_URL}/${id}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['CourseClass'],
