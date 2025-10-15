@@ -674,27 +674,33 @@ export default function FoldersPage() {
 
       {/* Breadcrumb */}
       {selectedFolder && (
-        <div className="flex items-center gap-2 text-sm">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedFolder(null)}
-          >
-            <Folder className="h-4 w-4 mr-1" />
-            Root
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedFolder(null)}
+            >
+              <Folder className="h-4 w-4 mr-1" />
+              Root
+            </Button>
+            {getFolderPath().map((folder, index) => (
+              <div key={folder._id} className="flex items-center gap-2">
+                <span>/</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedFolder(folder._id)}
+                >
+                  {folder.folderName}
+                </Button>
+              </div>
+            ))}
+          </div>
+          <Button onClick={handleCreateFolder} size="sm" variant="outline">
+            <FolderPlus className="mr-2 h-4 w-4" />
+            Create Subfolder
           </Button>
-          {getFolderPath().map((folder, index) => (
-            <div key={folder._id} className="flex items-center gap-2">
-              <span>/</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedFolder(folder._id)}
-              >
-                {folder.folderName}
-              </Button>
-            </div>
-          ))}
         </div>
       )}
 
@@ -799,8 +805,9 @@ export default function FoldersPage() {
         }}
         onSubmit={handleFolderModalSubmit}
         folder={editingFolder}
-        parentFolders={folders.filter(f => !f.parent)}
+        parentFolders={folders}
         isLoading={isCreating || isUpdating}
+        currentParentFolder={selectedFolder}
       />
     </div>
   )

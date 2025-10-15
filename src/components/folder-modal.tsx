@@ -101,6 +101,7 @@ interface FolderModalProps {
   folder?: Folder | null
   parentFolders?: Folder[]
   isLoading?: boolean
+  currentParentFolder?: string | null
 }
 
 const folderFormSchema = z.object({
@@ -160,12 +161,13 @@ export function FolderModal({
   folder,
   parentFolders = [],
   isLoading = false,
+  currentParentFolder = null,
 }: FolderModalProps) {
   const form = useForm<FolderFormValues>({
     resolver: zodResolver(folderFormSchema),
     defaultValues: {
       folderName: '',
-      parent: 'none',
+      parent: currentParentFolder || 'none',
       allowedUsers: 'none',
       courseClass: 'none',
       section: 'none',
@@ -186,21 +188,21 @@ export function FolderModal({
     } else {
       form.reset({
         folderName: '',
-        parent: 'none',
+        parent: currentParentFolder || undefined,
         allowedUsers: 'none',
         courseClass: 'none',
         section: 'none',
         subject: 'none',
       })
     }
-  }, [folder, form])
+  }, [folder, form, currentParentFolder])
 
 
   const handleSubmit = (values: FolderFormValues) => {
     // Convert "none" values to undefined for optional fields
     const processedValues = {
       ...values,
-      parent: values.parent === 'none' ? undefined : values.parent,
+      parent: values.parent === 'none' || !values.parent ? undefined : values.parent,
       allowedUsers: values.allowedUsers === 'none' ? undefined : values.allowedUsers,
       courseClass: values.courseClass === 'none' ? undefined : values.courseClass,
       section: values.section === 'none' ? undefined : values.section,
@@ -214,11 +216,13 @@ export function FolderModal({
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {folder ? 'Edit Folder' : 'Create New Folder'}
+            {folder ? 'Edit Folder' : currentParentFolder ? 'Create Subfolder' : 'Create New Folder'}
           </DialogTitle>
           <DialogDescription>
             {folder 
               ? 'Update folder details and permissions'
+              : currentParentFolder
+              ? 'Create a new subfolder within the current folder'
               : 'Create a new folder with access permissions and associations'
             }
           </DialogDescription>
@@ -249,35 +253,38 @@ export function FolderModal({
                 )}
               />
 
-              {/* Parent Folder */}
-              <FormField
-                control={form.control}
-                name="parent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parent Folder</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select parent folder (optional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">No Parent (Root Folder)</SelectItem>
-                        {parentFolders.map((parentFolder) => (
-                          <SelectItem key={parentFolder._id} value={parentFolder._id}>
-                            {parentFolder.folderName}
+              {/* Parent Folder - Only show when creating subfolder */}
+              {currentParentFolder && (
+                <FormField
+                  control={form.control}
+                  name="parent"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parent Folder</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={true}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Parent folder" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={currentParentFolder}>
+                            {parentFolders.find(f => f._id === currentParentFolder)?.folderName || 'Current Folder'}
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Select a parent folder to create a subfolder
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        This will be created as a subfolder of the current folder
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               {/* Course Class */}
               <FormField
