@@ -33,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { CourseClassModal } from '@/components/course-class-modal'
+import { SectionModal } from '@/components/section-modal'
 // Removed API imports - using dummy data only
 import { toast } from '@/hooks/use-toast'
 import {
@@ -50,21 +50,24 @@ import {
   VisibilityState,
 } from '@tanstack/react-table'
 
-// Define CourseClass type locally since we're not using API
-interface CourseClass {
+// Define Section type locally since we're not using API
+interface Section {
   _id: string
   name: string
-  description?: string
+  courseClass: {
+    _id: string
+    name: string
+  }
   createdAt: string
   updatedAt: string
 }
 
 type ViewMode = 'list' | 'grid'
 
-export default function CourseClassesPage() {
+export default function SectionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingCourseClass, setEditingCourseClass] = useState<CourseClass | null>(null)
-  const [deletingCourseClass, setDeletingCourseClass] = useState<CourseClass | null>(null)
+  const [editingSection, setEditingSection] = useState<Section | null>(null)
+  const [deletingSection, setDeletingSection] = useState<Section | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -74,53 +77,70 @@ export default function CourseClassesPage() {
     pageSize: 10,
   })
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
-  const [courseClasses, setCourseClasses] = useState<CourseClass[]>([])
+  const [sections, setSections] = useState<Section[]>([])
 
   // Dummy data for development and testing
-  const dummyCourseClasses: CourseClass[] = [
+  const dummySections: Section[] = [
     {
       _id: '1',
-      name: 'Mathematics 101',
-      description: 'Introduction to basic mathematical concepts including algebra, geometry, and trigonometry.',
+      name: 'Section A',
+      courseClass: {
+        _id: '1',
+        name: 'Mathematics 101'
+      },
       createdAt: '2024-01-15T10:30:00Z',
       updatedAt: '2024-01-15T10:30:00Z'
     },
     {
       _id: '2',
-      name: 'Computer Science Fundamentals',
-      description: 'Core concepts in computer science including programming, data structures, and algorithms.',
+      name: 'Section B',
+      courseClass: {
+        _id: '1',
+        name: 'Mathematics 101'
+      },
+      createdAt: '2024-01-16T11:30:00Z',
+      updatedAt: '2024-01-16T11:30:00Z'
+    },
+    {
+      _id: '3',
+      name: 'Section A',
+      courseClass: {
+        _id: '2',
+        name: 'Computer Science Fundamentals'
+      },
       createdAt: '2024-01-20T14:15:00Z',
       updatedAt: '2024-01-20T14:15:00Z'
     },
     {
-      _id: '3',
-      name: 'English Literature',
-      description: 'Study of classic and contemporary English literature with focus on critical analysis.',
+      _id: '4',
+      name: 'Section B',
+      courseClass: {
+        _id: '2',
+        name: 'Computer Science Fundamentals'
+      },
+      createdAt: '2024-01-21T15:15:00Z',
+      updatedAt: '2024-01-21T15:15:00Z'
+    },
+    {
+      _id: '5',
+      name: 'Section A',
+      courseClass: {
+        _id: '3',
+        name: 'English Literature'
+      },
       createdAt: '2024-01-25T09:45:00Z',
       updatedAt: '2024-01-25T09:45:00Z'
     },
     {
-      _id: '4',
-      name: 'Physics Lab',
-      description: 'Hands-on experiments and practical applications of physics principles.',
-      createdAt: '2024-02-01T11:20:00Z',
-      updatedAt: '2024-02-01T11:20:00Z'
-    },
-    {
-      _id: '5',
-      name: 'History of Art',
-      description: 'Survey of art history from ancient times to modern era with emphasis on cultural context.',
-      createdAt: '2024-02-05T16:30:00Z',
-      updatedAt: '2024-02-05T16:30:00Z'
-    },
-    {
       _id: '6',
-      name: 'Chemistry Advanced',
-      description: 'Advanced topics in chemistry including organic chemistry, biochemistry, and analytical methods.',
-      createdAt: '2024-02-10T13:45:00Z',
-      updatedAt: '2024-02-10T13:45:00Z'
+      name: 'Section B',
+      courseClass: {
+        _id: '3',
+        name: 'English Literature'
+      },
+      createdAt: '2024-01-26T10:45:00Z',
+      updatedAt: '2024-01-26T10:45:00Z'
     },
-    
   ]
 
   // Initialize with dummy data
@@ -129,15 +149,19 @@ export default function CourseClassesPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Initialize course classes with dummy data
+  // Initialize sections with dummy data
   useEffect(() => {
-    if (courseClasses.length === 0) {
-      setCourseClasses(dummyCourseClasses)
+    if (sections.length === 0) {
+      setSections(dummySections)
     }
-  }, [courseClasses.length])
+  }, [sections.length])
+
+  // Debug logs
+  console.log('Sections data:', sections)
+  console.log('Is loading:', isLoading)
 
   // Column definitions for the table
-  const columns: ColumnDef<CourseClass>[] = useMemo(
+  const columns: ColumnDef<Section>[] = useMemo(
     () => [
       {
         accessorKey: 'name',
@@ -148,7 +172,7 @@ export default function CourseClassesPage() {
               onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
               className="h-8 px-2 lg:px-3"
             >
-              Name
+              Section Name
               {column.getIsSorted() === 'asc' ? ' ↑' : column.getIsSorted() === 'desc' ? ' ↓' : ''}
             </Button>
           )
@@ -163,32 +187,30 @@ export default function CourseClassesPage() {
         enableHiding: false,
       },
       {
-        accessorKey: 'description',
-        header: 'Description',
+        accessorKey: 'courseClass',
+        header: 'Course Class',
         cell: ({ row }) => {
-          const description = row.getValue('description') as string
-          return description ? (
-            <span className="text-sm text-muted-foreground max-w-xs truncate">
-              {description}
-            </span>
-          ) : (
-            <Badge variant="secondary">No description</Badge>
+          const courseClass = row.getValue('courseClass') as { name: string }
+          return (
+            <Badge variant="outline" className="text-sm">
+              {courseClass.name}
+            </Badge>
           )
         },
-        enableSorting: false,
+        enableSorting: true,
       },
-      
+    
       {
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => {
-          const courseClass = row.original
+          const section = row.original
           return (
             <div className="flex items-center gap-2">
               {/* <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleEdit(courseClass)}
+                onClick={() => handleEdit(section)}
                 disabled={isUpdating}
               >
                 <Edit className="h-4 w-4" />
@@ -196,7 +218,7 @@ export default function CourseClassesPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDelete(courseClass)}
+                onClick={() => handleDelete(section)}
                 disabled={isDeleting}
               >
                 <Trash2 className="h-4 w-4 text-destructive" />
@@ -209,13 +231,13 @@ export default function CourseClassesPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => handleEdit(courseClass)}>
+                  <DropdownMenuItem onClick={() => handleEdit(section)}>
                     <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => handleDelete(courseClass)}
+                    onClick={() => handleDelete(section)}
                     className="text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
@@ -235,7 +257,7 @@ export default function CourseClassesPage() {
 
   // Initialize the table
   const table = useReactTable({
-    data: courseClasses,
+    data: sections,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -260,56 +282,64 @@ export default function CourseClassesPage() {
     },
   })
 
+  // Debug table state
+  console.log('Table rows:', table.getRowModel().rows.length)
+  console.log('Table data:', table.getRowModel().rows)
+
   const handleCreate = () => {
-    setEditingCourseClass(null)
+    console.log('handleCreate called') // Debug log
+    setEditingSection(null)
     setIsModalOpen(true)
   }
 
-  const handleEdit = (courseClass: CourseClass) => {
-    setEditingCourseClass(courseClass)
+  const handleEdit = (section: Section) => {
+    setEditingSection(section)
     setIsModalOpen(true)
   }
 
-  const handleDelete = (courseClass: CourseClass) => {
-    setDeletingCourseClass(courseClass)
+  const handleDelete = (section: Section) => {
+    setDeletingSection(section)
   }
 
   const handleModalSubmit = async (data: any) => {
     try {
       setIsUpdating(true)
       
-      if (editingCourseClass) {
-        // Update existing course class
-        setCourseClasses(prev => prev.map(courseClass => 
-          courseClass._id === editingCourseClass._id 
-            ? { ...courseClass, ...data, updatedAt: new Date().toISOString() }
-            : courseClass
+      if (editingSection) {
+        // Update existing section
+        setSections(prev => prev.map(section => 
+          section._id === editingSection._id 
+            ? { ...section, ...data, updatedAt: new Date().toISOString() }
+            : section
         ))
         toast({
           title: 'Success',
-          description: 'Course class updated successfully.',
+          description: 'Section updated successfully.',
         })
       } else {
-        // Create new course class
-        const newCourseClass: CourseClass = {
+        // Create new section
+        const newSection: Section = {
           _id: Date.now().toString(),
           name: data.name,
-          description: data.description || '',
+          courseClass: {
+            _id: data.courseClass,
+            name: dummySections.find(s => s.courseClass._id === data.courseClass)?.courseClass.name || 'Unknown'
+          },
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         }
-        setCourseClasses(prev => [...prev, newCourseClass])
+        setSections(prev => [...prev, newSection])
         toast({
           title: 'Success',
-          description: 'Course class created successfully.',
+          description: 'Section created successfully.',
         })
       }
       setIsModalOpen(false)
-      setEditingCourseClass(null)
+      setEditingSection(null)
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to save course class. Please try again.',
+        description: 'Failed to save section. Please try again.',
         variant: 'destructive',
       })
     } finally {
@@ -318,20 +348,20 @@ export default function CourseClassesPage() {
   }
 
   const handleConfirmDelete = async () => {
-    if (!deletingCourseClass) return
+    if (!deletingSection) return
 
     try {
       setIsDeleting(true)
-      setCourseClasses(prev => prev.filter(courseClass => courseClass._id !== deletingCourseClass._id))
+      setSections(prev => prev.filter(section => section._id !== deletingSection._id))
       toast({
         title: 'Success',
-        description: 'Course class deleted successfully.',
+        description: 'Section deleted successfully.',
       })
-      setDeletingCourseClass(null)
+      setDeletingSection(null)
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to delete course class. Please try again.',
+        description: 'Failed to delete section. Please try again.',
         variant: 'destructive',
       })
     } finally {
@@ -454,25 +484,26 @@ export default function CourseClassesPage() {
 
   const renderGridView = () => {
     const rows = table.getRowModel().rows
+    console.log('Grid view - rows:', rows.length) // Debug log
     
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {rows.length > 0 ? (
           rows.map((row) => {
-            const courseClass = row.original
+            const section = row.original
             return (
-              <Card key={courseClass._id} className="hover:shadow-md transition-shadow">
+              <Card key={section._id} className="hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                    
-                      <CardTitle className="text-lg">{courseClass.name}</CardTitle>
+                     
+                      <CardTitle className="text-lg">{section.name}</CardTitle>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEdit(courseClass)}
+                        onClick={() => handleEdit(section)}
                         disabled={isUpdating}
                       >
                         <Edit className="h-4 w-4" />
@@ -480,7 +511,7 @@ export default function CourseClassesPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(courseClass)}
+                        onClick={() => handleDelete(section)}
                         disabled={isDeleting}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -489,14 +520,15 @@ export default function CourseClassesPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  {courseClass.description ? (
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {courseClass.description}
-                    </p>
-                  ) : (
-                    <Badge variant="secondary" className="text-xs">No description</Badge>
-                  )}
-                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">Course Class:</span>
+                      <Badge variant="outline" className="text-xs">
+                        {section.courseClass.name}
+                      </Badge>
+                    </div>
+                   
+                  </div>
                 </CardContent>
               </Card>
             )
@@ -504,7 +536,7 @@ export default function CourseClassesPage() {
         ) : (
           <div className="col-span-full text-center py-8">
             <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-semibold text-gray-900">No course classes found</h3>
+            <h3 className="mt-2 text-sm font-semibold text-gray-900">No sections found</h3>
             <p className="mt-1 text-sm text-gray-500">
               Try adjusting your search or filters.
             </p>
@@ -514,98 +546,25 @@ export default function CourseClassesPage() {
     )
   }
 
-  // const renderFolderView = () => (
-  //   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-  //     {courseClasses.map((courseClass) => (
-  //       <Card key={courseClass._id} className="hover:shadow-md transition-shadow group">
-  //         <CardHeader className="pb-3">
-  //           <div className="flex items-center justify-between">
-  //             <div className="flex items-center gap-3">
-  //               <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-  //                 <Folder className="h-6 w-6 text-primary" />
-  //               </div>
-  //               <div>
-  //                 <CardTitle className="text-lg">{courseClass.name}</CardTitle>
-  //                 <p className="text-xs text-muted-foreground">Course Class</p>
-  //               </div>
-  //             </div>
-  //             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-  //               <Button
-  //                 variant="ghost"
-  //                 size="sm"
-  //                 onClick={() => handleEdit(courseClass)}
-  //                 disabled={isUpdating}
-  //               >
-  //                 <Edit className="h-4 w-4" />
-  //               </Button>
-  //               <Button
-  //                 variant="ghost"
-  //                 size="sm"
-  //                 onClick={() => handleDelete(courseClass)}
-  //                 disabled={isDeleting}
-  //               >
-  //                 <Trash2 className="h-4 w-4 text-destructive" />
-  //               </Button>
-  //             </div>
-  //           </div>
-  //         </CardHeader>
-  //         <CardContent className="pt-0">
-  //           {courseClass.description ? (
-  //             <p className="text-sm text-muted-foreground line-clamp-2">
-  //               {courseClass.description}
-  //             </p>
-  //           ) : (
-  //             <Badge variant="secondary" className="text-xs">No description</Badge>
-  //           )}
-  //           <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
-  //             <span>
-  //               Created: {courseClass.createdAt
-  //                 ? new Date(courseClass.createdAt).toLocaleDateString()
-  //                 : 'N/A'}
-  //             </span>
-  //             <Badge variant="outline" className="text-xs">
-  //               {courseClass.name.length} chars
-  //             </Badge>
-  //           </div>
-  //         </CardContent>
-  //       </Card>
-  //     ))}
-  //   </div>
-  // )
-
-  // if (error) {
-  //   return (
-  //     <div className="flex items-center justify-center h-64">
-  //       <Card className="w-96">
-  //         <CardContent className="pt-6">
-  //           <div className="text-center">
-  //             <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-  //             <h3 className="mt-2 text-sm font-semibold text-gray-900">Error</h3>
-  //             <p className="mt-1 text-sm text-gray-500">
-  //               Failed to load course classes. Please try again.
-  //             </p>
-  //           </div>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Course Classes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Sections</h1>
           <p className="text-muted-foreground">
-            Manage course classes and their descriptions
+            Manage sections and their course class assignments
           </p>
+         
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center border rounded-lg p-1">
             <Button
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setViewMode('list')}
+              onClick={() => {
+                console.log('Switching to list view') // Debug log
+                setViewMode('list')
+              }}
               className="h-8 px-3"
             >
               <List className="h-4 w-4" />
@@ -613,15 +572,24 @@ export default function CourseClassesPage() {
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
-              onClick={() => setViewMode('grid')}
+              onClick={() => {
+                console.log('Switching to grid view') // Debug log
+                setViewMode('grid')
+              }}
               className="h-8 px-3"
             >
               <Grid3X3 className="h-4 w-4" />
             </Button>
           </div>
-          <Button onClick={handleCreate} disabled={isCreating}>
+          <Button 
+            onClick={() => {
+              console.log('Add section clicked') // Debug log
+              handleCreate()
+            }} 
+            disabled={isCreating}
+          >
             <Plus className="mr-2 h-4 w-4" />
-            Add Course Class
+            Add Section
           </Button>
         </div>
       </div>
@@ -632,28 +600,58 @@ export default function CourseClassesPage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search course classes..."
+              placeholder="Search sections..."
               value={globalFilter ?? ''}
               onChange={(event) => setGlobalFilter(String(event.target.value))}
               className="pl-8"
             />
           </div>
-         
+          {/* <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings2 className="mr-2 h-4 w-4" />
+                Columns
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[150px]">
+              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuItem
+                      key={column.id}
+                      className="capitalize"
+                      onSelect={(e) => e.preventDefault()}
+                    >
+                      <Checkbox
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        className="mr-2"
+                      />
+                      {column.id}
+                    </DropdownMenuItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu> */}
         </div>
         <div className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} of {courseClasses.length} course classes
+          {table.getFilteredRowModel().rows.length} of {sections.length} sections
         </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle>
-            Course Classes {viewMode === 'list' ? 'List' : 'Grid'}
+            Sections {viewMode === 'list' ? 'List' : 'Grid'}
           </CardTitle>
           <CardDescription>
             {viewMode === 'list' 
-              ? 'A list of all course classes in the system'
-              : 'Course classes displayed in a grid layout'
+              ? 'A list of all sections in the system'
+              : 'Sections displayed in a grid layout'
             }
           </CardDescription>
         </CardHeader>
@@ -662,25 +660,26 @@ export default function CourseClassesPage() {
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                <p className="mt-2 text-sm text-muted-foreground">Loading course classes...</p>
+                <p className="mt-2 text-sm text-muted-foreground">Loading sections...</p>
               </div>
             </div>
-          ) : courseClasses.length === 0 ? (
+          ) : sections.length === 0 ? (
             <div className="text-center py-8">
               <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-2 text-sm font-semibold text-gray-900">No course classes</h3>
+              <h3 className="mt-2 text-sm font-semibold text-gray-900">No sections</h3>
               <p className="mt-1 text-sm text-gray-500">
-                Get started by creating a new course class.
+                Get started by creating a new section.
               </p>
               <div className="mt-6">
                 <Button onClick={handleCreate}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Course Class
+                  Add Section
                 </Button>
               </div>
             </div>
           ) : (
             <>
+              {console.log('Current view mode:', viewMode)} {/* Debug log */}
               {viewMode === 'list' && renderListView()}
               {viewMode === 'grid' && renderGridView()}
             </>
@@ -689,28 +688,28 @@ export default function CourseClassesPage() {
       </Card>
 
       {/* Add/Edit Modal */}
-      <CourseClassModal
+      <SectionModal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false)
-          setEditingCourseClass(null)
+          setEditingSection(null)
         }}
-        courseClass={editingCourseClass}
+        section={editingSection}
         onSubmit={handleModalSubmit}
         isLoading={isCreating || isUpdating}
       />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog
-        open={!!deletingCourseClass}
-        onOpenChange={() => setDeletingCourseClass(null)}
+        open={!!deletingSection}
+        onOpenChange={() => setDeletingSection(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the course class{' '}
-              <strong>{deletingCourseClass?.name}</strong>.
+              This action cannot be undone. This will permanently delete the section{' '}
+              <strong>{deletingSection?.name}</strong>.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
