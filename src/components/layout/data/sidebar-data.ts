@@ -11,8 +11,9 @@ import {
   IconPlus,
   IconBrandWhatsapp,
   IconNetwork,
+  IconBook,
 } from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd } from 'lucide-react'
+import { AudioWaveform, Command, GalleryVerticalEnd, BookOpen } from 'lucide-react'
 import { type SidebarData } from '../types'
 
 export const sidebarData: SidebarData = {
@@ -47,7 +48,11 @@ export const sidebarData: SidebarData = {
           url: '/',
           icon: IconHome,
         },
-      
+        {
+          title: 'Course Classes',
+          url: '/course-classes',
+          icon: BookOpen,
+        },
         {
           title: 'Settings',
           url: '/settings',
